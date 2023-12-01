@@ -33,4 +33,8 @@ contract OwnerUpOnlyTest is Test {
         upOnly.increment();
         assertEq(upOnly.count(), 1);
     }
+    function testFail_IncrementAsNotOwner() public {
+        vm.prank(address(0));
+        upOnly.increment();
+    }
 }
