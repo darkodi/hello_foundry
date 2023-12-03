@@ -3,7 +3,7 @@ pragma solidity ^0.8.13;
 
 import "forge-std/Test.sol"; //  A superset of DSTest containing standard libraries, a cheatcodes instance (vm), and Hardhat console
 
-contract EmitContractTest is Test {
+contract EmitContractTest is Test { // inherit from Test
     event Transfer(address indexed from, address indexed to, uint256 amount);
 
     function test_ExpectEmit() public {
