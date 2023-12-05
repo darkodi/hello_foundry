@@ -34,6 +34,7 @@ contract OwnerUpOnlyTest is Test {
         assertEq(upOnly.count(), 1);
     }
     //  using testFail is considered an anti-pattern since it does not tell us anything about why upOnly.increment() reverted.
+
     function testFail_IncrementAsNotOwner() public {
         vm.prank(address(0)); // prank cheatcode changed our identity to the zero address for the next call (upOnly.increment())
         upOnly.increment();

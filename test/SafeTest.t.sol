@@ -5,7 +5,7 @@ import "forge-std/Test.sol";
 
 contract Safe {
     // executed from outside the contract when the contract receives Ether directly without any data
-    receive() external payable {} 
+    receive() external payable {}
 
     // transfers all the Ether held by the contract (address(this).balance) to the sender (msg.sender).
     function withdraw() external {
@@ -23,7 +23,6 @@ contract SafeTest is Test {
     function setUp() public {
         safe = new Safe();
     }
-    
 
     function test_Withdraw() public {
         payable(address(safe)).transfer(1 ether); // sends 1 Ether to the Safe contract
@@ -35,8 +34,7 @@ contract SafeTest is Test {
 
     // The general property: given a safe balance, when we withdraw, we should get whatever is in the safe.
     // fails if amount is > uint96
-     function testFuzz_Withdraw(uint96 amount) public {
-
+    function testFuzz_Withdraw(uint96 amount) public {
         vm.assume(amount > 0.1 ether); // exclude certain cases
         payable(address(safe)).transfer(amount);
         uint256 preBalance = address(this).balance;
@@ -45,4 +43,3 @@ contract SafeTest is Test {
         assertEq(preBalance + amount, postBalance);
     }
 }
-
