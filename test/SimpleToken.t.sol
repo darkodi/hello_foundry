@@ -5,6 +5,7 @@ import "forge-std/Test.sol";
 
 contract SimpleToken {
     mapping(address => uint256) public balances;
+    uint256 public constant MAX_TRANSFER_AMOUNT = 500; // Set a maximum transfer amount
 
     constructor(uint256 initialSupply) {
         balances[msg.sender] = initialSupply;
@@ -12,6 +13,7 @@ contract SimpleToken {
 
     function transfer(address to, uint256 amount) public {
         require(balances[msg.sender] >= amount, "Not enough tokens");
+        require(amount <= MAX_TRANSFER_AMOUNT, "Transfer amount exceeds maximum limit");
         balances[msg.sender] -= amount;
         balances[to] += amount;
     }
@@ -37,6 +39,7 @@ contract SimpleTokenTest is Test {
         // Distribute some initial tokens to test users
         for (uint i = 0; i < testUsers.length; i++) {
             token.transfer(testUsers[i], 100); // Distribute 100 tokens to each test user
+            console.log("Transferred 100 tokens to", testUsers[i]);
         }
     }
 
@@ -53,8 +56,10 @@ contract SimpleTokenTest is Test {
         // Sum up all balances of test users
         for (uint i = 0; i < testUsers.length; i++) {
             totalSupply += token.getBalance(testUsers[i]);
+            console.log("User", testUsers[i], "balance:", token.getBalance(testUsers[i]));
+          
         }
-
+        console.log("Calculated total supply:", totalSupply);
         // Assert that the total supply hasn't changed
         assertEq(totalSupply, INITIAL_SUPPLY);
     }
