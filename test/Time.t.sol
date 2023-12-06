@@ -31,4 +31,15 @@ contract TimeTest is Test {
         vm.warp(startAt + 4 days); // cannot bid after endAt time
         auction.bid();
     }
+      function testTimestamp() public {
+        uint256 t = block.timestamp;
+        // skip 100sec from t
+        skip(100);
+        assertEq(block.timestamp, t + 100);
+
+        // decrease 10sec from current timestamp;
+        rewind(10);
+        assertEq(block.timestamp, t+90);
+    }
+    
 }
