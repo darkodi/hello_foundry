@@ -26,4 +26,9 @@ contract TimeTest is Test {
         vm.warp(startAt + 3 days); // set block.timestamp in the future (block.timestamp > startAt && block.timestamp < endAt)
         auction.bid();
     }
+     function testBidFailsAfterEndTime() public {
+        vm.expectRevert(bytes("cannot bid"));
+        vm.warp(startAt + 4 days); // cannot bid after endAt time
+        auction.bid();
+    }
 }
