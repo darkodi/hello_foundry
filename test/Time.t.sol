@@ -20,6 +20,10 @@ contract TimeTest is Test {
 
     function testBidFailsBeforeStartTime() public {
         vm.expectRevert(bytes("cannot bid")); 
-        auction.bid(); // will revert because block.timestamp = 1
+        auction.bid(); // will revert because block.timestamp < startAt
+    }
+     function testBid() public {
+        vm.warp(startAt + 3 days); // set block.timestamp in the future (block.timestamp > startAt && block.timestamp < endAt)
+        auction.bid();
     }
 }

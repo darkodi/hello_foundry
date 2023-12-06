@@ -4,7 +4,7 @@ import "forge-std/console.sol";
 
 contract Auction {
     uint256 public startAt = block.timestamp + 1 days;
-    uint256 public endAt = block.timestamp + 2 days;
+    uint256 public endAt = block.timestamp + 4 days;
 
     function bid() external {
         console.logUint(block.timestamp);
