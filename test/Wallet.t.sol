@@ -4,23 +4,27 @@ pragma solidity ^0.8.18;
 import "forge-std/Test.sol";
 import {Wallet} from "../src/Wallet.sol";
 
-// forge test --match-path test/Auth.t.sol -vvvv
+// Examples of deal and hoax
+// deal(address, uint) - Set balance of address
+// hoax(address, uint) - deal + prank, Sets up a prank and set balance
 
-contract AuthTest is Test {
+contract WalletTest is Test {
     Wallet public wallet;
 
     function setUp() public {
-        wallet = new Wallet();
+        wallet = new Wallet{value: 1e18}();
     }
 
-    function testSetOwner() public {
-        wallet.setOwner(address(1));
-        assertEq(wallet.owner(), address(1));
+    // It allows the contract to receive Ether.
+    receive() external payable {}
+
+    // Check how much ETH available for test
+    function testEthBalance() public {
+        console.log("ETH balance", address(this).balance / 1e18);
     }
 
-    function testFailNotOwner() public {
-        // next call will be called by address(1)
-        vm.prank(address(1));
-        wallet.setOwner(address(1));
+    function _send(uint256 amount) private {
+        (bool ok,) = address(wallet).call{value: amount}("");
+        require(ok, "send ETH failed");
     }
 }
