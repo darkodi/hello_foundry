@@ -15,7 +15,7 @@ contract WETH {
     mapping(address => mapping(address => uint256)) public allowance;
 
     receive() external payable {
-        deposit();
+        deposit(); // deposit is called whenever this contract receives Eth (via transfer)
     }
 
     function deposit() public payable {
