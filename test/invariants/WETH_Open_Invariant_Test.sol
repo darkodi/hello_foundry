@@ -22,3 +22,8 @@ contract WETH_Open_Invariant_Tests is Test {
         assertEq(0, weth.totalSupply());
     }
 }
+// [PASS] invariant_totalSupply_is_always_zero() (runs: 256, calls: 3840, reverts: 2216)
+// Test passes but there are plenty of reverts
+// Functions of WETH, e.g. withdraw(), transfer() or transferFrom() will revert if the balance of WETH < amount to withdraw or transfer
+// that actually has been the case for 2216 times
+// runs: number of sequence of functions called from the foundry 
