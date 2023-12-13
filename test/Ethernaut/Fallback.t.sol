@@ -1,6 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.10;
 
+import "forge-std/Test.sol";
+import {CommonBase} from "forge-std/Base.sol";
+import {StdCheats} from "forge-std/StdCheats.sol";
+import {StdUtils} from "forge-std/StdUtils.sol";
+
 // Look carefully at the contract's code below.
 
 // You will beat this level if
@@ -47,20 +52,55 @@ contract Fallback {
     owner = msg.sender; // changing the owner if contribution is > than 0 and sent eth amount > 0
   }
 }
+contract Handler is CommonBase, StdCheats, StdUtils {
 
-import "forge-std/Test.sol";
-contract FallbackTest is Test {
     Fallback public fback;
-    address attacker;
 
+    constructor(Fallback _fback) {
+        fback = _fback;
+    }
+
+    function sendToFallback(uint256 amount) public {
+        //amount = bound(amount, 0, 0.001 ether);
+
+        // direct transfer of amount to Fallback contract
+        (bool ok,) = address(fback).call{value: amount}(""); 
+        require(ok, "sendToFallback failed");
+    }
+
+    function contribute() public {
+
+        fback.contribute();
+    }
+
+
+}
+contract FallbackTest is Test {
+   
+    address attacker;
+    Fallback fback;
+    Handler public handler;
     function setUp() public {
         // Deploy the Fallback contract
         fback = new Fallback();
+        handler = new Handler(fback);
         // Initialize the attacker address (could be any address)
         attacker = address(0x1234);
 
         vm.deal(attacker, 1 ether); // Fund attacker with 1 ether
         vm.deal(address(fback), 10 ether); // Fund fback with 10 ether
+
+        bytes4[] memory selectors = new bytes4[](2);
+        selectors[0] = Handler.contribute.selector;
+        selectors[1] = Handler.sendToFallback.selector;
+
+
+        targetContract(address(handler));
+        // this is used to target specific functions for the random execution by the Foundry
+        targetSelector(
+            FuzzSelector({addr: address(handler), selectors: selectors})
+        );
+        targetSender(attacker);
     }
 
     function invariant_OwnerIsNotAttacker() public view{
