@@ -84,7 +84,10 @@ contract Handler is CommonBase, StdCheats, StdUtils {
     fback.contribute{value: amount}();
     }
 
-
+    function withdraw(uint256 amount) payable public {
+        vm.prank(attacker);
+        fback.withdraw();
+    }
 }
 contract FallbackTest is Test {
    
@@ -96,8 +99,8 @@ contract FallbackTest is Test {
         fback = new Fallback();
         attacker = address(0x1234);
 
-        deal(attacker, 100 wei); // Fund attacker
-        deal(address(fback), 1000 wei); // Fund fback
+        deal(attacker, 10 wei); // Fund attacker
+        deal(address(fback), 100 wei); // Fund fback
 
         handler = new Handler(fback, attacker);
 
